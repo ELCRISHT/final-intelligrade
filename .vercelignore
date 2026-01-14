@@ -1,0 +1,13 @@
+# Exclude local server folder (using Vercel serverless functions instead)
+server/
+
+# Exclude documentation
+README.md
+DEPLOYMENT.md
+
+# Exclude data files
+intelligrade_summary_report.csv
+metadata.json
+
+# Exclude shortcuts
+*.lnk
