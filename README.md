@@ -1,7 +1,3 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
-
 # IntelliGrade - AI Dependency Analytics Platform
 
 IntelliGrade is an educational analytics web application designed for Laguna State Polytechnic University (LSPU) to analyze and monitor AI dependency patterns among students across different colleges and academic levels.
@@ -274,4 +270,4 @@ For issues or questions:
 
 ---
 
-Made with ❤️ for LSPU by ELCRISHT
+Made with IntelliGrade Team - DEVCO-BLV
