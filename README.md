@@ -1,8 +1,8 @@
-# IntelliGrade - AI Dependency Analytics Platform
+# IntelliGrade - AI Dependency Dashboard
 
 IntelliGrade is an educational analytics web application designed for Laguna State Polytechnic University (LSPU) to analyze and monitor AI dependency patterns among students across different colleges and academic levels.
 
-## 🚀 Features
+## System Features
 
 - **Student Analytics Dashboard** - Comprehensive overview of AI dependency metrics
 - **Multi-College Support** - Track data across all LSPU colleges (CCS, CED, CEng, etc.)
@@ -24,7 +24,7 @@ Before you begin, ensure you have the following installed:
 - **MongoDB Atlas Account** (free tier) - [Sign up here](https://www.mongodb.com/cloud/atlas)
 - **Firebase Project** - [Create here](https://console.firebase.google.com/)
 
-## 🛠️ Installation & Setup
+## Installation & Setup
 
 ### 1. Clone the Repository
 
@@ -99,7 +99,7 @@ VITE_GEMINI_API_KEY=your_gemini_api_key_here
 
 Get your API key from [Google AI Studio](https://ai.google.dev/)
 
-## 🚀 Running Locally
+## Run Locally
 
 ### Option 1: Run Both Frontend and Backend Separately
 
@@ -126,7 +126,7 @@ npm run dev
 npm run server:dev
 ```
 
-## 👤 First Time Setup
+## First Time Setup
 
 ### Create Admin Account
 
@@ -171,7 +171,7 @@ All faculty features plus:
 - **User Management** - Create, edit, delete users
 - **Role Assignment** - Grant/revoke admin privileges
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 intelligrade/
@@ -198,7 +198,7 @@ intelligrade/
 └── public/              # Static assets
 ```
 
-## 🔒 Security Notes
+## Security Notes
 
 - **Never commit** `.env` or `.env.local` files
 - **Keep** Firebase API keys and MongoDB credentials secure
@@ -206,7 +206,7 @@ intelligrade/
 - **Use** strong passwords for database users
 - **Restrict** MongoDB Network Access in production
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### MongoDB Connection Failed
 - Verify `MONGODB_URI` in `server/.env`
@@ -234,7 +234,7 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-## 📦 Deployment
+## Deployment
 
 ### Deploy to Vercel (Recommended)
 
@@ -250,7 +250,7 @@ Add environment variables in Vercel Dashboard:
 
 See [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) for detailed instructions.
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
@@ -258,16 +258,13 @@ See [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) for detailed instructions.
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a Pull Request
 
-## 📝 License
 
-This project is developed for Laguna State Polytechnic University (LSPU).
-
-## 📧 Support
+## Support
 
 For issues or questions:
 - Create an issue on GitHub
-- Contact: LSPU IT Department
+- Contact: IntelliGrade Team at 0322-1518@lspu.edu.ph
 
 ---
 
-Made with IntelliGrade Team - DEVCO-BLV
+IntelliGrade Team - DEVCO-BLV
