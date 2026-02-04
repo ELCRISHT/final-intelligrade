@@ -89,16 +89,6 @@ MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/intelligrade?ret
 PORT=5000
 ```
 
-### 6. Optional: Configure Gemini AI (for iPredict feature)
-
-Create `.env.local` in the root directory:
-
-```env
-VITE_GEMINI_API_KEY=your_gemini_api_key_here
-```
-
-Get your API key from [Google AI Studio](https://ai.google.dev/)
-
 ## Run Locally
 
 ### Option 1: Run Both Frontend and Backend Separately
@@ -110,7 +100,7 @@ npm run dev
 Access at: http://localhost:3000
 
 **Terminal 2 - Backend:**
-```bash
+```
 cd server
 node index.js
 ```
@@ -150,7 +140,6 @@ npm run server:dev
 Sample CSV format:
 ```csv
 Student_ID,College,Year_Level,Reading_Dependency_Score,Writing_Dependency_Score,Numeracy_Dependency_Score,Motivation_Score,AI_Tools_Count,Primary_AI_Tool,Usage_Purpose
-12345678,CCS,3,4.5,5.2,3.8,6.0,3,ChatGPT,Research
 ```
 
 ## 📖 Usage Guide
@@ -228,7 +217,7 @@ taskkill /PID <PID> /F
 ```
 
 ### Build Errors
-```bash
+```
 # Clear cache and reinstall
 rm -rf node_modules package-lock.json
 npm install
@@ -238,7 +227,7 @@ npm install
 
 ### Deploy to Vercel (Recommended)
 
-```bash
+```
 npm install -g vercel
 vercel login
 vercel --prod
@@ -247,8 +236,6 @@ vercel --prod
 Add environment variables in Vercel Dashboard:
 - `MONGODB_URI`
 - Firebase config variables (if needed)
-
-See [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) for detailed instructions.
 
 ## Contributing
 
