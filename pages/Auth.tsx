@@ -55,6 +55,9 @@ const getFirebaseErrorMessage = (errorCode: string): string => {
   return errorMessages[errorCode] || 'An unexpected error occurred. Please try again.';
 };
 
+// Admin registration secret code
+const ADMIN_SECRET_CODE = 'IntelliGrade#2025';
+
 // API URL - uses /api for production (Vercel), localhost for development
 const getApiUrl = () => {
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost') {
@@ -72,7 +75,9 @@ const Auth: React.FC<AuthProps> = ({ mode, onLogin, onNavigate, theme, toggleThe
   const [lastName, setLastName] = useState('');
   const [selectedCollege, setSelectedCollege] = useState('');
   const [contactNumber, setContactNumber] = useState('');
+  const [confirmContactNumber, setConfirmContactNumber] = useState('');
   const [selectedRole, setSelectedRole] = useState<'admin' | 'faculty'>('faculty');
+  const [adminSecretCode, setAdminSecretCode] = useState('');
   
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -112,6 +117,20 @@ const Auth: React.FC<AuthProps> = ({ mode, onLogin, onNavigate, theme, toggleThe
     if (!confirmPassword) return true;
     return password === confirmPassword;
   }, [password, confirmPassword]);
+
+  // Contact number validation (Philippine format: 09XXXXXXXXX or +639XXXXXXXXX)
+  const isValidContactNumber = useMemo(() => {
+    if (!contactNumber) return false;
+    const cleaned = contactNumber.replace(/[\s-]/g, '');
+    // Philippine mobile: 09XXXXXXXXX (11 digits) or +639XXXXXXXXX (13 chars)
+    const phMobileRegex = /^(09\d{9}|\+639\d{9})$/;
+    return phMobileRegex.test(cleaned);
+  }, [contactNumber]);
+
+  const contactNumbersMatch = useMemo(() => {
+    if (!confirmContactNumber) return true;
+    return contactNumber === confirmContactNumber;
+  }, [contactNumber, confirmContactNumber]);
 
   // Handle Firebase Sign Up
   const handleSignUp = async () => {
@@ -237,8 +256,20 @@ const Auth: React.FC<AuthProps> = ({ mode, onLogin, onNavigate, theme, toggleThe
         setError('Please fill in all required fields.');
         return;
       }
+      if (!isValidContactNumber) {
+        setError('Please enter a valid Philippine mobile number (e.g., 09123456789).');
+        return;
+      }
+      if (!contactNumbersMatch) {
+        setError('Contact numbers do not match.');
+        return;
+      }
       if (selectedRole === 'faculty' && !selectedCollege) {
         setError('Please select a college.');
+        return;
+      }
+      if (selectedRole === 'admin' && adminSecretCode !== ADMIN_SECRET_CODE) {
+        setError('Invalid admin secret code. Please contact the system administrator.');
         return;
       }
       if (!passwordsMatch) {
@@ -428,7 +459,7 @@ const Auth: React.FC<AuthProps> = ({ mode, onLogin, onNavigate, theme, toggleThe
                               : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:border-blue-400'
                           }`}
                         >
-                          👨‍🏫 Faculty Member
+                          Faculty Member
                         </button>
                         <button
                           type="button"
@@ -439,9 +470,24 @@ const Auth: React.FC<AuthProps> = ({ mode, onLogin, onNavigate, theme, toggleThe
                               : 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-700 dark:text-slate-300 hover:border-red-400'
                           }`}
                         >
-                          🛡️ Administrator
+                          Administrator
                         </button>
                       </div>
+                      {/* Admin Secret Code */}
+                      {selectedRole === 'admin' && (
+                        <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                          <label className="block text-xs font-semibold text-red-700 dark:text-red-400 mb-2">Admin Secret Code Required</label>
+                          <input 
+                            type="password" 
+                            required={selectedRole === 'admin'}
+                            value={adminSecretCode} 
+                            onChange={(e) => setAdminSecretCode(e.target.value)}
+                            className="w-full px-3 py-2 border border-red-300 dark:border-red-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-lg focus:ring-2 focus:ring-red-500 outline-none transition-all text-sm"
+                            placeholder="Enter secret code"
+                          />
+                          <p className="text-[10px] text-red-600 dark:text-red-400 mt-1">Contact system administrator for the secret code</p>
+                        </div>
+                      )}
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -449,27 +495,57 @@ const Auth: React.FC<AuthProps> = ({ mode, onLogin, onNavigate, theme, toggleThe
                         <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Contact Number</label>
                         <div className="relative">
                           <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                          <input type="tel" required value={contactNumber} onChange={(e) => setContactNumber(e.target.value)} className="w-full pl-10 pr-4 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all" placeholder="09123456789" />
+                          <input 
+                            type="tel" 
+                            required 
+                            value={contactNumber} 
+                            onChange={(e) => setContactNumber(e.target.value)} 
+                            className={`w-full pl-10 pr-10 py-3 border ${contactNumber && !isValidContactNumber ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500'} bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl outline-none transition-all`} 
+                            placeholder="09123456789" 
+                          />
+                          {contactNumber && (
+                            <span className={`absolute right-3 top-1/2 -translate-y-1/2 text-xs font-medium ${isValidContactNumber ? 'text-green-500' : 'text-red-500'}`}>
+                              {isValidContactNumber ? '✓' : '✗'}
+                            </span>
+                          )}
+                        </div>
+                        {contactNumber && !isValidContactNumber && (
+                          <p className="text-[10px] text-red-500 font-medium">Enter valid PH number (09XXXXXXXXX)</p>
+                        )}
+                      </div>
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Confirm Contact Number</label>
+                        <div className="relative">
+                          <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                          <input 
+                            type="tel" 
+                            required 
+                            value={confirmContactNumber} 
+                            onChange={(e) => setConfirmContactNumber(e.target.value)} 
+                            className={`w-full pl-10 pr-4 py-3 border ${!contactNumbersMatch ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-slate-700 focus:ring-blue-500'} bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl outline-none transition-all`} 
+                            placeholder="09123456789" 
+                          />
+                        </div>
+                        {!contactNumbersMatch && <p className="text-[10px] text-red-500 font-bold">Contact numbers do not match</p>}
+                      </div>
+                    </div>
+                    {selectedRole === 'faculty' && (
+                      <div className="space-y-1">
+                        <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">College</label>
+                        <div className="relative">
+                          <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                          <select 
+                            required={selectedRole === 'faculty'} value={selectedCollege} onChange={(e) => setSelectedCollege(e.target.value)}
+                            aria-label="Select College"
+                            className="w-full pl-10 pr-10 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
+                          >
+                            <option value="">Select College</option>
+                            {COLLEGES.map(c => <option key={c} value={c}>{c} ({COLLEGE_CODES[c]})</option>)}
+                          </select>
+                          <ArrowRight className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 rotate-90 pointer-events-none" />
                         </div>
                       </div>
-                      {selectedRole === 'faculty' && (
-                        <div className="space-y-1">
-                          <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">College</label>
-                          <div className="relative">
-                            <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
-                            <select 
-                              required={selectedRole === 'faculty'} value={selectedCollege} onChange={(e) => setSelectedCollege(e.target.value)}
-                              aria-label="Select College"
-                              className="w-full pl-10 pr-10 py-3 border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-950 text-slate-900 dark:text-white rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all appearance-none"
-                            >
-                              <option value="">Select College</option>
-                              {COLLEGES.map(c => <option key={c} value={c}>{c} ({COLLEGE_CODES[c]})</option>)}
-                            </select>
-                            <ArrowRight className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 w-4 h-4 rotate-90 pointer-events-none" />
-                          </div>
-                        </div>
-                      )}
-                    </div>
+                    )}
                   </>
                 )}
 
@@ -489,7 +565,7 @@ const Auth: React.FC<AuthProps> = ({ mode, onLogin, onNavigate, theme, toggleThe
                   <div className="space-y-1">
                     <div className="flex justify-between items-center">
                       <label className="block text-sm font-medium text-slate-700 dark:text-slate-300">Password</label>
-                      {mode === 'login' && <button type="button" onClick={() => setIsForgotPassword(true)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Forgot?</button>}
+                      {mode === 'login' && <button type="button" onClick={() => setIsForgotPassword(true)} className="text-xs text-blue-600 dark:text-blue-400 font-semibold hover:underline">Forgot password?</button>}
                     </div>
                     <div className="relative">
                       <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
@@ -498,6 +574,30 @@ const Auth: React.FC<AuthProps> = ({ mode, onLogin, onNavigate, theme, toggleThe
                         {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                       </button>
                     </div>
+                    {/* Password Strength Indicator */}
+                    {mode === 'signup' && password && (
+                      <div className="space-y-1 mt-2">
+                        <div className="flex gap-1">
+                          {[1, 2, 3, 4].map((level) => (
+                            <div
+                              key={level}
+                              className={`h-1.5 flex-1 rounded-full transition-all ${
+                                passwordStrength >= level ? strengthColor : 'bg-slate-200 dark:bg-slate-700'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                        <p className={`text-xs font-medium ${
+                          passwordStrength === 0 ? 'text-slate-400' :
+                          passwordStrength === 1 ? 'text-red-500' :
+                          passwordStrength === 2 ? 'text-yellow-500' :
+                          passwordStrength === 3 ? 'text-blue-500' :
+                          'text-green-500'
+                        }`}>
+                          {strengthLabel}
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {mode === 'signup' && (

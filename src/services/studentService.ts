@@ -102,6 +102,48 @@ export const importStudents = async (students: Student[]): Promise<{ success: nu
   }
 };
 
+// Bulk import students with option to clear existing data
+export const importStudentsWithReplace = async (
+  students: Student[], 
+  clearBeforeImport: boolean = false,
+  college?: string
+): Promise<{ success: number; failed: number; deletedCount?: number }> => {
+  try {
+    const API_BASE_URL = getApiUrl();
+    const response = await fetch(`${API_BASE_URL}/students/bulk`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ students, clearBeforeImport, college })
+    });
+    
+    if (!response.ok) throw new Error('Failed to import students');
+    return await response.json();
+  } catch (error) {
+    console.error('Error importing students:', error);
+    return { success: 0, failed: students.length };
+  }
+};
+
+// Delete all students (or college-specific)
+export const deleteAllStudents = async (college?: string): Promise<{ deletedCount: number }> => {
+  try {
+    const API_BASE_URL = getApiUrl();
+    const url = college 
+      ? `${API_BASE_URL}/students?college=${encodeURIComponent(college)}`
+      : `${API_BASE_URL}/students`;
+    
+    const response = await fetch(url, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) throw new Error('Failed to delete students');
+    return await response.json();
+  } catch (error) {
+    console.error('Error deleting students:', error);
+    return { deletedCount: 0 };
+  }
+};
+
 // Get analytics data
 export const fetchAnalytics = async (college?: string): Promise<any> => {
   try {

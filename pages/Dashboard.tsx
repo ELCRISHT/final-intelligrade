@@ -11,7 +11,8 @@ import {
   Download,
   Upload,
   RefreshCw,
-  ChevronDown
+  ChevronDown,
+  Trash2
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -37,9 +38,47 @@ interface DashboardProps {
 
 const Dashboard: React.FC<DashboardProps> = ({ students, setStudents, theme, user }) => {
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showImportConfirm, setShowImportConfirm] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isFaculty = user?.role === 'faculty';
+
+  // Refresh data from API
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const { fetchStudents } = await import('../src/services/studentService');
+      const freshStudents = await fetchStudents(isFaculty ? user?.college : undefined);
+      setStudents(freshStudents);
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Delete all data from database
+  const handleDeleteAll = async () => {
+    setIsDeleting(true);
+    try {
+      const { deleteAllStudents } = await import('../src/services/studentService');
+      const result = await deleteAllStudents(isFaculty ? user?.college : undefined);
+      
+      // Clear local state
+      setStudents([]);
+      setShowDeleteConfirm(false);
+      alert(`Successfully deleted ${result.deletedCount} student records from the database.`);
+    } catch (error) {
+      console.error('Error deleting data:', error);
+      alert('Failed to delete data. Please try again.');
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   // --- Data Processing ---
   const totalStudents = students.length;
@@ -104,8 +143,19 @@ const Dashboard: React.FC<DashboardProps> = ({ students, setStudents, theme, use
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    
+    // Show confirmation dialog
+    setPendingFile(file);
+    setShowImportConfirm(true);
+    event.target.value = '';
+  };
+
+  const processFileImport = async (replaceExisting: boolean) => {
+    const file = pendingFile;
+    if (!file) return;
+    
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const text = e.target?.result as string;
       if (!text) return;
       const lines = text.split(/\r\n|\n/).filter(l => l.trim().length > 0);
@@ -136,10 +186,33 @@ const Dashboard: React.FC<DashboardProps> = ({ students, setStudents, theme, use
             if (studentObj.Student_ID) newStudents.push(studentObj as Student);
         } catch(err) { console.error(err); }
       }
-      if (newStudents.length > 0) setStudents(prev => [...prev, ...newStudents]);
+      
+      if (newStudents.length > 0) {
+        // Import via API with clearBeforeImport option
+        const { importStudentsWithReplace } = await import('../src/services/studentService');
+        const result = await importStudentsWithReplace(
+          newStudents, 
+          replaceExisting,
+          user?.role === 'faculty' ? user?.college : undefined
+        );
+        
+        if (result.success > 0) {
+          // Update local state
+          if (replaceExisting) {
+            setStudents(newStudents);
+          } else {
+            setStudents(prev => [...prev, ...newStudents]);
+          }
+          alert(`Import successful! Added ${result.success} students.${result.deletedCount ? ` Replaced ${result.deletedCount} existing records.` : ''}`);
+        } else {
+          alert('Import failed. Please check your CSV format.');
+        }
+      }
+      
+      setShowImportConfirm(false);
+      setPendingFile(null);
     };
     reader.readAsText(file);
-    event.target.value = '';
   };
 
   const exportCSV = () => {
@@ -291,6 +364,14 @@ const Dashboard: React.FC<DashboardProps> = ({ students, setStudents, theme, use
                <Upload className="w-4 h-4" /> Import CSV
              </button>
            )}
+           {!isFaculty && students.length > 0 && (
+             <button 
+               onClick={() => setShowDeleteConfirm(true)} 
+               className="text-sm bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400 px-4 py-2 rounded-lg font-medium border border-red-200 dark:border-red-800 shadow-sm hover:bg-red-100 dark:hover:bg-red-900/40 transition-colors flex items-center gap-2"
+             >
+               <Trash2 className="w-4 h-4" /> Delete Data
+             </button>
+           )}
            <div className="relative">
               <button onClick={() => setShowExportMenu(!showExportMenu)} className="text-sm bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 px-4 py-2 rounded-lg font-medium border border-slate-200 dark:border-slate-700 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors flex items-center gap-2">
                 <Download className="w-4 h-4" /> Export Report <ChevronDown className="w-3 h-3" />
@@ -302,8 +383,12 @@ const Dashboard: React.FC<DashboardProps> = ({ students, setStudents, theme, use
                 </div>
               )}
            </div>
-           <button onClick={() => window.location.reload()} className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-2">
-             <RefreshCw className="w-4 h-4" /> Refresh
+           <button 
+             onClick={handleRefresh} 
+             disabled={isRefreshing}
+             className="text-sm bg-blue-600 text-white px-4 py-2 rounded-lg font-medium shadow-sm hover:bg-blue-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+           >
+             <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} /> {isRefreshing ? 'Refreshing...' : 'Refresh'}
            </button>
         </div>
       </div>
@@ -367,6 +452,103 @@ const Dashboard: React.FC<DashboardProps> = ({ students, setStudents, theme, use
           </ResponsiveContainer>
         </div>
       </div>
+
+      {/* Import Confirmation Dialog */}
+      {showImportConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">
+              Import CSV Data
+            </h3>
+            <p className="text-slate-600 dark:text-slate-300 mb-4">
+              Do you want to replace existing data or add to it?
+            </p>
+            <div className="space-y-2 mb-6">
+              <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <strong>Replace:</strong> Deletes all existing records{user?.role === 'faculty' ? ` for ${user?.college}` : ''} before importing
+                </p>
+              </div>
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Add:</strong> Keeps existing data and adds new records
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowImportConfirm(false);
+                  setPendingFile(null);
+                }}
+                className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => processFileImport(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Add to Existing
+              </button>
+              <button
+                onClick={() => processFileImport(true)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Replace All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="p-3 bg-red-100 dark:bg-red-900/30 rounded-full">
+                <Trash2 className="w-6 h-6 text-red-600 dark:text-red-400" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 dark:text-white">
+                Delete All Data
+              </h3>
+            </div>
+            <p className="text-slate-600 dark:text-slate-300 mb-2">
+              Are you sure you want to delete all student data from the database?
+            </p>
+            <div className="p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg mb-6">
+              <p className="text-sm text-red-700 dark:text-red-300">
+                <strong>Warning:</strong> This will permanently delete <strong>{students.length}</strong> student records. This action cannot be undone.
+              </p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={isDeleting}
+                className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteAll}
+                disabled={isDeleting}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2 disabled:opacity-50"
+              >
+                {isDeleting ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 animate-spin" /> Deleting...
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-4 h-4" /> Delete All Data
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

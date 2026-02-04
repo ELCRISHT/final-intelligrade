@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { PerformanceLevel, User } from '../types';
-import { 
-  BrainCircuit, 
+import {
+  TrendingUp,
   ArrowRight, 
   RefreshCw, 
   AlertCircle, 
@@ -130,7 +130,7 @@ const IPredict: React.FC<IPredictProps> = ({ user }) => {
             </div>
           </div>
           <button onClick={handlePredict} disabled={isAnimating} className="w-full py-3 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-70">
-            {isAnimating ? <RefreshCw className="animate-spin w-5 h-5" /> : <BrainCircuit className="w-5 h-5" />}
+            {isAnimating ? <RefreshCw className="animate-spin w-5 h-5" /> : <TrendingUp className="w-5 h-5" />}
             {isAnimating ? 'Analyzing...' : 'Generate Prediction'}
           </button>
         </div>
@@ -140,7 +140,7 @@ const IPredict: React.FC<IPredictProps> = ({ user }) => {
            <div className={`h-full bg-white dark:bg-slate-900 p-6 rounded-xl shadow-sm border border-slate-100 dark:border-slate-800 flex flex-col justify-center items-center text-center transition-all duration-500 ${prediction || isAnimating ? 'opacity-100 translate-y-0' : 'opacity-50 translate-y-4'}`}>
               {!prediction && !isAnimating && (
                 <div className="text-slate-400 dark:text-slate-600">
-                  <BrainCircuit className="w-16 h-16 mx-auto mb-4 opacity-20" />
+                  <TrendingUp className="w-16 h-16 mx-auto mb-4 opacity-20" />
                   <p>Run the model to see results</p>
                 </div>
               )}

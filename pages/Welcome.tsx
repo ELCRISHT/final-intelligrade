@@ -5,7 +5,7 @@ import {
   Menu, 
   X, 
   BarChart2, 
-  BrainCircuit, 
+  TrendingUp, 
   ShieldCheck,
   ChevronRight,
   BookOpen,
@@ -245,7 +245,7 @@ const Welcome: React.FC<WelcomeProps> = ({ onNavigate, theme, toggleTheme }) => 
                  <div className="w-full md:w-1/2 flex justify-center md:justify-end pr-0 md:pr-12">
                     <div className="bg-white dark:bg-slate-800 p-6 rounded-xl border border-slate-200 dark:border-slate-700 shadow-sm w-full max-w-sm hover:border-purple-300 dark:hover:border-purple-500 transition-colors group">
                        <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 rounded-lg flex items-center justify-center mb-4 group-hover:bg-purple-600 group-hover:text-white transition-colors">
-                          <BrainCircuit className="w-6 h-6" />
+                          <TrendingUp className="w-6 h-6" />
                        </div>
                        <h4 className="font-bold text-lg text-slate-900 dark:text-white mb-2">3. Run iPredict Model</h4>
                        <p className="text-sm text-slate-600 dark:text-slate-400">

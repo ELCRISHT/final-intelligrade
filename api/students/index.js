@@ -50,6 +50,23 @@ module.exports = async function handler(req, res) {
       }
     }
 
+    if (req.method === 'DELETE') {
+      try {
+        const filter = {};
+        // If college is specified in query, only delete students from that college
+        if (req.query.college) {
+          filter.College = req.query.college;
+        }
+        const result = await Student.deleteMany(filter);
+        return res.status(200).json({ 
+          message: 'Students deleted successfully', 
+          deletedCount: result.deletedCount 
+        });
+      } catch (error) {
+        return res.status(500).json({ message: error.message });
+      }
+    }
+
     return res.status(405).json({ message: 'Method not allowed' });
   } catch (error) {
     return res.status(500).json({ message: error.message });

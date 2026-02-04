@@ -50,6 +50,8 @@ const StudentDirectory: React.FC<StudentDirectoryProps> = ({ students, setStuden
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [importReport, setImportReport] = useState<{ successes: number; errors: string[] } | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' } | null>(null);
+  const [showImportConfirm, setShowImportConfirm] = useState(false);
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   
   const itemsPerPage = 10;
@@ -188,8 +190,19 @@ const StudentDirectory: React.FC<StudentDirectoryProps> = ({ students, setStuden
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
+    
+    // Show confirmation dialog
+    setPendingFile(file);
+    setShowImportConfirm(true);
+    event.target.value = '';
+  };
+
+  const processFileImport = async (replaceExisting: boolean) => {
+    const file = pendingFile;
+    if (!file) return;
+    
     const reader = new FileReader();
-    reader.onload = (e) => {
+    reader.onload = async (e) => {
       const text = e.target?.result as string;
       if (!text) return;
       const lines = text.split(/\r\n|\n/).filter(l => l.trim().length > 0);
@@ -227,11 +240,37 @@ const StudentDirectory: React.FC<StudentDirectoryProps> = ({ students, setStuden
            newStudents.push(studentObj as Student);
         }
       }
-      if (newStudents.length > 0) setStudents(prev => [...prev, ...newStudents]);
-      setImportReport({ successes: newStudents.length, errors });
+      
+      if (newStudents.length > 0) {
+        // Import via API with clearBeforeImport option
+        const { importStudentsWithReplace } = await import('../src/services/studentService');
+        const result = await importStudentsWithReplace(
+          newStudents, 
+          replaceExisting,
+          isFaculty ? user?.college : undefined
+        );
+        
+        if (result.success > 0) {
+          // Update local state
+          if (replaceExisting) {
+            setStudents(newStudents);
+          } else {
+            setStudents(prev => [...prev, ...newStudents]);
+          }
+        }
+        
+        setImportReport({ 
+          successes: result.success, 
+          errors: [...errors, ...(result.deletedCount ? [`Replaced ${result.deletedCount} existing records`] : [])]
+        });
+      } else {
+        setImportReport({ successes: 0, errors });
+      }
+      
+      setShowImportConfirm(false);
+      setPendingFile(null);
     };
     reader.readAsText(file);
-    event.target.value = '';
   };
 
   const getDependencyLevel = (score: number) => {
@@ -485,6 +524,55 @@ const StudentDirectory: React.FC<StudentDirectoryProps> = ({ students, setStuden
            </div>
         </div>
       </div>
+
+      {/* Import Confirmation Dialog */}
+      {showImportConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-slate-800 rounded-lg p-6 max-w-md w-full mx-4 shadow-xl">
+            <h3 className="text-lg font-semibold text-slate-900 dark:text-white mb-3">
+              Import CSV Data
+            </h3>
+            <p className="text-slate-600 dark:text-slate-300 mb-4">
+              Do you want to replace existing data or add to it?
+            </p>
+            <div className="space-y-2 mb-6">
+              <div className="p-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+                <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                  <strong>Replace:</strong> Deletes all existing records{isFaculty ? ` for ${user?.college}` : ''} before importing
+                </p>
+              </div>
+              <div className="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  <strong>Add:</strong> Keeps existing data and adds new records
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => {
+                  setShowImportConfirm(false);
+                  setPendingFile(null);
+                }}
+                className="px-4 py-2 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => processFileImport(false)}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Add to Existing
+              </button>
+              <button
+                onClick={() => processFileImport(true)}
+                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors"
+              >
+                Replace All
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

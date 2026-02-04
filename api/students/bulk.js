@@ -19,9 +19,21 @@ module.exports = async function handler(req, res) {
   try {
     await connectDB();
 
-    const { students } = req.body;
+    const { students, clearBeforeImport, college } = req.body;
     let success = 0;
     let failed = 0;
+    let deletedCount = 0;
+
+    // Clear existing data if requested
+    if (clearBeforeImport) {
+      const filter = {};
+      // If college is specified, only delete students from that college
+      if (college) {
+        filter.College = college;
+      }
+      const deleteResult = await Student.deleteMany(filter);
+      deletedCount = deleteResult.deletedCount;
+    }
 
     for (const studentData of students) {
       try {
@@ -36,7 +48,7 @@ module.exports = async function handler(req, res) {
       }
     }
 
-    return res.status(200).json({ success, failed });
+    return res.status(200).json({ success, failed, deletedCount });
   } catch (error) {
     return res.status(500).json({ message: error.message });
   }

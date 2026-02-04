@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { View, User } from '../types';
+import { COLLEGE_CODES } from '../constants';
 import { 
   LayoutDashboard, 
   Users, 
   FileBarChart, 
-  BrainCircuit, 
+  TrendingUp, 
   Settings, 
   LogOut, 
   Menu, 
@@ -43,7 +44,7 @@ const Layout: React.FC<LayoutProps> = ({
 
   const navItems = [
     { view: View.Dashboard, label: 'Dashboard', icon: LayoutDashboard },
-    { view: View.IPredict, label: 'iPredict', icon: BrainCircuit },
+    { view: View.IPredict, label: 'iPredict', icon: TrendingUp },
     { view: View.Directory, label: 'Student Directory', icon: Users },
     { view: View.Reports, label: 'Reports', icon: FileBarChart },
     ...(user?.role === 'admin' ? [{ view: View.Admin, label: 'Admin Panel', icon: Shield }] : []),
@@ -95,7 +96,11 @@ const Layout: React.FC<LayoutProps> = ({
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-medium text-white truncate">{user?.name}</p>
-              <p className="text-xs text-slate-400 truncate capitalize">{user?.role}</p>
+              <p className="text-xs text-slate-400 truncate capitalize">
+                {user?.role === 'faculty' && user?.college 
+                  ? `${COLLEGE_CODES[user.college] || user.college} - Faculty`
+                  : user?.role}
+              </p>
             </div>
           </div>
           <button

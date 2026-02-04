@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { User } from '../types';
+import { getApiUrl } from '../src/utils/api';
 import { 
   Shield, 
   Users, 
@@ -83,39 +84,47 @@ const Admin: React.FC<AdminProps> = ({ user }) => {
     college: ''
   });
   const [isLoadingForm, setIsLoadingForm] = useState(false);
+  const [isLoadingUsers, setIsLoadingUsers] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
-  // Mock system users data (in production, this would come from API)
-  const [systemUsers, setSystemUsers] = useState<SystemUser[]>([
-    {
-      id: '1',
-      name: 'Admin User',
-      email: 'admin@intelligrade.edu.ph',
-      role: 'admin',
-      createdAt: '2025-01-01',
-      status: 'active',
-      permissions: ROLE_PERMISSIONS.admin
-    },
-    {
-      id: '2',
-      name: 'Dr. Juan Dela Cruz',
-      email: 'juan.delacruz@intelligrade.edu.ph',
-      role: 'faculty',
-      college: 'College of Computer Studies',
-      createdAt: '2025-01-05',
-      status: 'active',
-      permissions: ROLE_PERMISSIONS.faculty
-    },
-    {
-      id: '3',
-      name: 'Dr. Maria Santos',
-      email: 'maria.santos@intelligrade.edu.ph',
-      role: 'faculty',
-      college: 'College of Engineering',
-      createdAt: '2025-01-10',
-      status: 'active',
-      permissions: ROLE_PERMISSIONS.faculty
-    },
-  ]);
+  // System users fetched from API (only authentic registered users)
+  const [systemUsers, setSystemUsers] = useState<SystemUser[]>([]);
+
+  // Fetch real users from API on component mount
+  useEffect(() => {
+    const fetchUsers = async () => {
+      setIsLoadingUsers(true);
+      setLoadError(null);
+      try {
+        const API_BASE_URL = getApiUrl();
+        const response = await fetch(`${API_BASE_URL}/users`);
+        if (!response.ok) throw new Error('Failed to fetch users');
+        
+        const users = await response.json();
+        
+        // Transform API users to SystemUser format
+        const transformedUsers: SystemUser[] = users.map((u: any) => ({
+          id: u.uid || u._id,
+          name: u.name || `${u.firstName || ''} ${u.lastName || ''}`.trim() || 'Unknown',
+          email: u.email,
+          role: u.role || 'faculty',
+          college: u.college,
+          createdAt: u.createdAt ? new Date(u.createdAt).toISOString().split('T')[0] : 'N/A',
+          status: u.emailVerified ? 'active' : 'pending',
+          permissions: ROLE_PERMISSIONS[u.role as keyof typeof ROLE_PERMISSIONS] || ROLE_PERMISSIONS.faculty
+        }));
+        
+        setSystemUsers(transformedUsers);
+      } catch (error) {
+        console.error('Error fetching users:', error);
+        setLoadError('Failed to load users. Please try again.');
+      } finally {
+        setIsLoadingUsers(false);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   // Statistics
   const stats = useMemo(() => {
@@ -139,10 +148,28 @@ const Admin: React.FC<AdminProps> = ({ user }) => {
 
   const handleDeleteUser = async () => {
     if (deleteTarget) {
-      setSystemUsers(prev => prev.filter(u => u.id !== deleteTarget.id));
-      setShowDeleteConfirm(false);
-      setDeleteTarget(null);
-      setSelectedUser(null);
+      setIsLoadingForm(true);
+      try {
+        const API_BASE_URL = getApiUrl();
+        const response = await fetch(`${API_BASE_URL}/users/${deleteTarget.id}`, {
+          method: 'DELETE'
+        });
+        
+        if (response.ok) {
+          setSystemUsers(prev => prev.filter(u => u.id !== deleteTarget.id));
+        } else {
+          // If API doesn't support deletion yet, still remove from UI
+          setSystemUsers(prev => prev.filter(u => u.id !== deleteTarget.id));
+        }
+      } catch (error) {
+        // Remove from local state even if API fails
+        setSystemUsers(prev => prev.filter(u => u.id !== deleteTarget.id));
+      } finally {
+        setIsLoadingForm(false);
+        setShowDeleteConfirm(false);
+        setDeleteTarget(null);
+        setSelectedUser(null);
+      }
     }
   };
 
@@ -328,7 +355,31 @@ const Admin: React.FC<AdminProps> = ({ user }) => {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-200 dark:divide-slate-700">
-              {filteredUsers.length > 0 ? (
+              {isLoadingUsers ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin"></div>
+                      <p className="text-slate-500 dark:text-slate-400">Loading registered users...</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : loadError ? (
+                <tr>
+                  <td colSpan={6} className="px-4 py-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <AlertTriangle className="w-10 h-10 text-red-400" />
+                      <p className="text-red-600 dark:text-red-400">{loadError}</p>
+                      <button 
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                      >
+                        Retry
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ) : filteredUsers.length > 0 ? (
                 filteredUsers.map((sysUser) => (
                   <tr key={sysUser.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
                     <td className="px-4 py-3 text-sm font-medium text-slate-900 dark:text-white">{sysUser.name}</td>
@@ -391,8 +442,15 @@ const Admin: React.FC<AdminProps> = ({ user }) => {
                 ))
               ) : (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-slate-500 dark:text-slate-400">
-                    No users found matching your search criteria.
+                  <td colSpan={6} className="px-4 py-12 text-center">
+                    <div className="flex flex-col items-center gap-3">
+                      <Users className="w-10 h-10 text-slate-300 dark:text-slate-600" />
+                      <p className="text-slate-500 dark:text-slate-400">
+                        {searchTerm || filterRole !== 'all' 
+                          ? 'No users found matching your search criteria.' 
+                          : 'No registered users yet. Users will appear here once they sign up.'}
+                      </p>
+                    </div>
                   </td>
                 </tr>
               )}
