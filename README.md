@@ -1,6 +1,21 @@
 # IntelliGrade - AI Dependency Dashboard
 
-IntelliGrade is an educational analytics web application designed for Laguna State Polytechnic University (LSPU) to analyze and monitor AI dependency patterns among students across different colleges and academic levels.
+IntelliGrade is an educational analytics web application designed for Laguna State Polytechnic University (LSPU) to analyze and monitor AI dependency patterns among students across different colleges.
+
+## Table of Contents
+
+1. [System Features](#system-features)
+2. [Prerequisites](#prerequisites)
+3. [Installation and Setup](#installation-and-setup)
+4. [Running the Application](#running-the-application)
+5. [First Time Setup](#first-time-setup)
+6. [Usage Guide](#usage-guide)
+7. [Project Structure](#project-structure)
+8. [Security Best Practices](#security-best-practices)
+9. [Troubleshooting](#troubleshooting)
+10. [Deployment](#deployment)
+11. [Contributing](#contributing)
+12. [Support](#support)
 
 ## System Features
 
@@ -24,22 +39,22 @@ Before you begin, ensure you have the following installed:
 - **MongoDB Atlas Account** (free tier) - [Sign up here](https://www.mongodb.com/cloud/atlas)
 - **Firebase Project** - [Create here](https://console.firebase.google.com/)
 
-## Installation & Setup
+## Installation and Setup
 
-### 1. Clone the Repository
+### Step 1: Clone the Repository
 
 ```bash
 git clone https://github.com/ELCRISHT/final-intelligrade.git
 cd final-intelligrade
 ```
 
-### 2. Install Frontend Dependencies
+### Step 2: Install Frontend Dependencies
 
 ```bash
 npm install
 ```
 
-### 3. Install Backend Dependencies
+### Step 3: Install Backend Dependencies
 
 ```bash
 cd server
@@ -47,15 +62,15 @@ npm install
 cd ..
 ```
 
-### 4. Configure Firebase
+### Step 4: Configure Firebase
 
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Create a new project or use existing one
-3. Enable **Authentication** → **Email/Password** sign-in method
-4. Go to Project Settings → General → Your apps
+1. Navigate to [Firebase Console](https://console.firebase.google.com/)
+2. Create a new project or select an existing one
+3. Enable **Authentication** and then enable **Email/Password** sign-in method
+4. Go to Project Settings, then General, and scroll to Your apps
 5. Register a web app and copy the Firebase configuration
 
-6. Create `src/config/firebase.ts` with your Firebase config:
+6. Create a new file at `src/config/firebase.ts` with your Firebase configuration:
 
 ```typescript
 import { initializeApp } from 'firebase/app';
@@ -74,152 +89,184 @@ const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
 ```
 
-### 5. Configure MongoDB
+Replace the placeholder values with your actual Firebase configuration.
+
+### Step 5: Configure MongoDB
 
 1. Create a [MongoDB Atlas](https://www.mongodb.com/cloud/atlas) account
-2. Create a new cluster (free M0 tier is sufficient)
-3. Create a database user with password
-4. Add your IP to Network Access (or allow from anywhere: 0.0.0.0/0)
-5. Get your connection string
+2. Create a new cluster (the free M0 tier is sufficient for development)
+3. Create a database user with a secure password
+4. Add your IP address to Network Access (or allow access from anywhere using 0.0.0.0/0 for development only)
+5. Obtain your connection string from the cluster dashboard
 
-6. Create `server/.env` file:
+6. Create a `.env` file in the `server` directory:
 
 ```env
 MONGODB_URI=mongodb+srv://username:password@cluster.mongodb.net/intelligrade?retryWrites=true&w=majority
 PORT=5000
 ```
 
-## Run Locally
+Replace `username`, `password`, and `cluster` with your actual MongoDB credentials.
 
-### Option 1: Run Both Frontend and Backend Separately
+## Running the Application
+
+### Option 1: Run Frontend and Backend Separately
 
 **Terminal 1 - Frontend:**
 ```bash
 npm run dev
 ```
-Access at: http://localhost:3000
+The frontend will be accessible at: http://localhost:3000
 
 **Terminal 2 - Backend:**
-```
+```bash
 cd server
 node index.js
 ```
-Backend runs on: http://localhost:5000
+The backend will run on: http://localhost:5000
 
-### Option 2: Quick Start (PowerShell)
+### Option 2: Quick Start with npm Scripts
 
-```powershell
-# Terminal 1
+**Terminal 1:**
+```bash
 npm run dev
+```
 
-# Terminal 2
+**Terminal 2:**
+```bash
 npm run server:dev
 ```
 
 ## First Time Setup
 
-### Create Admin Account
+### Creating an Admin Account
 
-1. Go to http://localhost:3000
-2. Click **Sign Up**
-3. Fill in your details:
-   - First Name, Last Name, Contact Number
-   - Email (use your institutional email)
+1. Open your browser and navigate to http://localhost:3000
+2. Click the **Sign Up** button
+3. Fill in the registration form with the following details:
+   - First Name
+   - Last Name
+   - Contact Number
+   - Email (preferably your institutional email)
    - Password (minimum 6 characters)
    - Select **Administrator** role
-4. Check your email for verification link
-5. Verify your email and log in
+4. Check your email inbox for a verification link
+5. Click the verification link to verify your email address
+6. Return to the application and log in with your credentials
 
-### Import Student Data (Optional)
+### Importing Student Data (Optional)
 
-1. Login as Admin
-2. Go to **Student Directory**
-3. Click **Import Students** (if implemented)
-4. Upload CSV file with student data
+1. Log in as an Administrator
+2. Navigate to the **Student Directory** page
+3. Click the **Import Students** button (if implemented)
+4. Upload a CSV file with student data
 
-Sample CSV format:
+**Sample CSV Format:**
 ```csv
 Student_ID,College,Year_Level,Reading_Dependency_Score,Writing_Dependency_Score,Numeracy_Dependency_Score,Motivation_Score,AI_Tools_Count,Primary_AI_Tool,Usage_Purpose
 ```
 
-## 📖 Usage Guide
+## Usage Guide
 
 ### For Faculty Users
 
-1. **Login** with your verified account
-2. **Dashboard** - View overall analytics for your college
-3. **Student Directory** - Browse and search individual students
-4. **Reports** - Generate and download PDF reports
-5. **Settings** - Change password or update profile
+1. **Login** - Sign in with your verified account credentials
+2. **Dashboard** - View overall analytics and metrics for your college
+3. **Student Directory** - Browse, search, and view individual student profiles
+4. **Reports** - Generate and download PDF reports with analytics data
+5. **Settings** - Update your profile information or change your password
 
 ### For Administrators
 
-All faculty features plus:
-- **Admin Panel** - Manage users and permissions
-- **Cross-College Analytics** - View data from all colleges
-- **User Management** - Create, edit, delete users
-- **Role Assignment** - Grant/revoke admin privileges
+Administrators have access to all faculty features plus the following:
+
+- **Admin Panel** - Manage users and system permissions
+- **Cross-College Analytics** - View aggregated data from all colleges
+- **User Management** - Create, edit, and delete user accounts
+- **Role Assignment** - Grant or revoke administrative privileges
 
 ## Project Structure
 
 ```
 intelligrade/
-├── api/                    # Vercel serverless functions
-│   ├── users/             # User management endpoints
-│   ├── students/          # Student data endpoints
-│   ├── analytics/         # Analytics endpoints
-│   └── lib/               # Shared utilities and models
-├── pages/                 # Application pages
-│   ├── Auth.tsx          # Login/Signup
-│   ├── Dashboard.tsx     # Analytics dashboard
-│   ├── StudentDirectory.tsx
-│   ├── Admin.tsx         # Admin panel
-│   └── Settings.tsx      # User settings
-├── components/           # Reusable components
-├── server/               # Express.js backend (local dev)
-│   ├── models/          # MongoDB models
-│   ├── routes/          # API routes
-│   └── index.js         # Server entry point
+├── api/                       # Vercel serverless functions
+│   ├── users/                 # User management endpoints
+│   ├── students/              # Student data endpoints
+│   ├── analytics/             # Analytics endpoints
+│   └── lib/                   # Shared utilities and models
+├── pages/                     # Application pages
+│   ├── Auth.tsx               # Login and Signup page
+│   ├── Dashboard.tsx          # Analytics dashboard
+│   ├── StudentDirectory.tsx   # Student directory page
+│   ├── Admin.tsx              # Admin panel
+│   └── Settings.tsx           # User settings page
+├── components/                # Reusable UI components
+├── server/                    # Express.js backend (local development)
+│   ├── models/                # MongoDB data models
+│   ├── routes/                # API route handlers
+│   └── index.js               # Server entry point
 ├── src/
-│   ├── config/          # Firebase configuration
-│   ├── services/        # API service functions
-│   └── utils/           # Helper utilities
-└── public/              # Static assets
+│   ├── config/                # Configuration files
+│   ├── services/              # API service functions
+│   └── utils/                 # Helper utilities
+└── public/                    # Static assets
 ```
 
-## Security Notes
+## Security Best Practices
 
-- **Never commit** `.env` or `.env.local` files
-- **Keep** Firebase API keys and MongoDB credentials secure
-- **Enable** email verification for all users
-- **Use** strong passwords for database users
-- **Restrict** MongoDB Network Access in production
+- **Never commit** `.env` or `.env.local` files to version control
+- **Keep** Firebase API keys and MongoDB credentials secure and private
+- **Enable** email verification for all new user accounts
+- **Use** strong passwords for database users and accounts
+- **Restrict** MongoDB Network Access to specific IP addresses in production environments
+- **Regularly update** dependencies to patch security vulnerabilities
 
 ## Troubleshooting
 
 ### MongoDB Connection Failed
-- Verify `MONGODB_URI` in `server/.env`
-- Check MongoDB Atlas Network Access allows your IP
-- Ensure database user credentials are correct
-- Confirm cluster is not paused
+
+**Possible Solutions:**
+- Verify the `MONGODB_URI` in your `server/.env` file is correct
+- Check that MongoDB Atlas Network Access allows your current IP address
+- Ensure database user credentials (username and password) are correct
+- Confirm that your cluster is not paused in MongoDB Atlas
 
 ### Firebase Authentication Error
-- Verify Firebase config in `src/config/firebase.ts`
-- Enable Email/Password auth in Firebase Console
-- Check email verification is sent (check spam folder)
+
+**Possible Solutions:**
+- Verify that your Firebase configuration in `src/config/firebase.ts` is correct
+- Ensure Email/Password authentication is enabled in the Firebase Console
+- Check that email verification emails are being sent (check spam/junk folder)
+- Confirm your Firebase project has the correct authorized domains
 
 ### Port Already in Use
+
+**On Windows:**
 ```bash
-# Find process using port 3000 or 5000
+# Find the process using port 3000 or 5000
 netstat -ano | findstr :3000
-# Kill the process (replace PID)
+
+# Kill the process (replace PID with the actual process ID)
 taskkill /PID <PID> /F
 ```
 
-### Build Errors
+**On macOS/Linux:**
+```bash
+# Find the process using port 3000 or 5000
+lsof -i :3000
+
+# Kill the process (replace PID with the actual process ID)
+kill -9 <PID>
 ```
-# Clear cache and reinstall
+
+### Build Errors
+
+**Clear cache and reinstall dependencies:**
+```bash
+# Remove node_modules and package-lock.json
 rm -rf node_modules package-lock.json
+
+# Reinstall dependencies
 npm install
 ```
 
@@ -227,31 +274,68 @@ npm install
 
 ### Deploy to Vercel (Recommended)
 
-```
+1. Install Vercel CLI globally:
+```bash
 npm install -g vercel
+```
+
+2. Log in to Vercel:
+```bash
 vercel login
+```
+
+3. Deploy to production:
+```bash
 vercel --prod
 ```
 
-Add environment variables in Vercel Dashboard:
-- `MONGODB_URI`
-- Firebase config variables (if needed)
+4. Add environment variables in the Vercel Dashboard:
+   - `MONGODB_URI`
+   - Firebase configuration variables (if needed)
+
+### Deploy Backend Separately
+
+For the backend API, consider deploying to:
+- **Railway** - [railway.app](https://railway.app/)
+- **Render** - [render.com](https://render.com/)
+- **Heroku** - [heroku.com](https://heroku.com/)
 
 ## Contributing
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+We welcome contributions from the community! To contribute:
 
+1. Fork the repository to your GitHub account
+2. Create a feature branch:
+   ```bash
+   git checkout -b feature/AmazingFeature
+   ```
+3. Make your changes and commit them:
+   ```bash
+   git commit -m 'Add some AmazingFeature'
+   ```
+4. Push to your branch:
+   ```bash
+   git push origin feature/AmazingFeature
+   ```
+5. Open a Pull Request with a clear description of your changes
 
-## Support/Issues
+### Contribution Guidelines
 
-For issues or questions:
-- Create an issue on GitHub
-- Contact: IntelliGrade Team at 0322-1518@lspu.edu.ph
+- Write clear and descriptive commit messages.
+- Follow the existing code style and conventions.
+- Test your changes thoroughly before submitting.
+- Update documentation as needed.
+- Be respectful and constructive in code reviews.
+
+## Support
+
+For issues, questions, or feature requests:
+
+- **Create an issue** on the [GitHub repository](https://github.com/ELCRISHT/final-intelligrade/issues)
+- **Contact us** at: 0322-1518@lspu.edu.ph
 
 ---
 
-IntelliGrade Team - DEVCO-BLV
+**IntelliGrade Team - DEVCO-BLV**
+
+Developed with dedication for Laguna State Polytechnic University
