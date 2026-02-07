@@ -246,7 +246,7 @@ Add environment variables in Vercel Dashboard:
 5. Open a Pull Request
 
 
-## Support
+## Support/Issues
 
 For issues or questions:
 - Create an issue on GitHub
