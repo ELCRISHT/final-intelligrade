@@ -14,7 +14,7 @@ IntelliGrade is an educational analytics web application designed for Laguna Sta
 - **Firebase Authentication** - Secure email/password authentication with verification
 - **MongoDB Integration** - Scalable database for student and user data
 
-## 📋 Prerequisites
+## Prerequisites
 
 Before you begin, ensure you have the following installed:
 
